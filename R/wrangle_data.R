@@ -1,5 +1,7 @@
 # load libraries
 source("R/project_libraries.R")
+source("R/function_as.Date.multicol().R")
+source("R/function_levels_check().R")
 
 #### create the sites sheet ----
 # first check the structure of the template
@@ -29,45 +31,6 @@ names(sites_data) == names(sites_data_CEUT)
 # export to Excel
 write.xlsx(sites_data_CEUT, "data/data_form_chickgrowth_CEUT.xlsx", 
            showNA = TRUE, sheetName = "2. sites", append = FALSE, row.names = FALSE)
-
-#### create the observers sheet ----
-# first check the structure of the template
-observers_and_authors_data <- 
-  read_excel(path = "data/data_form_chickgrowth.xlsx", 
-             sheet = "3. observers & authors", skip = 1, 
-             col_types = "text", na = "NA")
-
-names(observers_and_authors_data)
-
-# make the sheet for the Ceuta data
-observers_and_authors_data_CEUT <- 
-  data.frame(first_name = NA,
-             all_names = NA,
-             last_name = NA,
-             Ceuta_abbreviation = levels_check(biometric_data_CEUT, col_name = "observer_abbreviation"),
-             corrected_abbrviation = NA,
-             sites = "CEUT",
-             institution = NA,
-             department = NA,
-             address = NA,
-             ZIP = NA,
-             country = NA) %>% 
-  mutate(first_name = ifelse(abbreviation == "LEP", "Luke", NA),
-         all_names = ifelse(abbreviation == "LEP", "L. J.", NA),
-         last_name = ifelse(abbreviation == "LEP", "Eberhart-Hertel", NA),
-         institution = ifelse(abbreviation == "LEP", "Max Planck Institute for Ornithology", NA),
-         department = ifelse(abbreviation == "LEP", "Research Group for Behavioural Genetics and Evolutionary Ecology", NA),
-         address = ifelse(abbreviation == "LEP", "Eberhard-Gwinner-Str. 5, Seewiesen", NA),
-         ZIP = ifelse(abbreviation == "LEP", "82319", NA),
-         country = ifelse(abbreviation == "LEP", "Germany", NA),
-         corrected_abbrviation = ifelse(abbreviation == "LEP", "LJEP", NA))
-
-# check if the wrangled data frame contains the same structure as the template
-names(observers_and_authors_data) == names(observers_and_authors_data_CEUT)
-
-# export to Excel
-write.xlsx(observers_and_authors_data_CEUT, "data/data_form_chickgrowth_CEUT.xlsx", 
-           showNA = TRUE, sheetName = "3. observers & authors", append = TRUE, row.names = FALSE)
 
 #### create the biometrics sheet ----
 # first check the structure of the template
@@ -193,7 +156,28 @@ biometric_data_CEUT <-
   # change the date and time to the format in the template
   mutate(date = format(date, "%d/%m/%Y"),
          hatchdate_observed = format(hatchdate_observed, "%d/%m/%Y"),
-         time = paste0(substr(time, 1, 2), ":", substr(time, 3, 4)))
+         time = paste0(substr(time, 1, 2), ":", substr(time, 3, 4))) %>% 
+  
+  # correct the abbreviations of observers to the 4-letter code
+  mutate(observer_abbreviation = ifelse(observer_abbreviation == "CK" | observer_abbreviation == "KC", "CKUE",
+                                        ifelse(observer_abbreviation == "MC" | observer_abbreviation == "MCL", "MCLO",
+                                               ifelse(observer_abbreviation == "SG" | observer_abbreviation == "SGA", "SGDA",
+                                                      ifelse(observer_abbreviation == "LEP", "LJEP",
+                                                             ifelse(observer_abbreviation == "LL", "LLAN",
+                                                                    ifelse(observer_abbreviation == "LF", "LRFR",
+                                                                           ifelse(observer_abbreviation == "DVR", "DVRO",
+                                                                                  ifelse(observer_abbreviation == "KAVR", "KAVR",
+                                                                                         ifelse(observer_abbreviation == "RB", "RBBA",
+                                                                                                ifelse(observer_abbreviation == "RB", "RBBA",
+                                                                                                       ifelse(observer_abbreviation == "RB", "RBBA",
+                                                                                                              ifelse(observer_abbreviation == "OC", "OCGO",
+                                                                                                                     ifelse(observer_abbreviation == "OV", "OSVE",
+                                                                                                                            ifelse(observer_abbreviation == "SQ", "RSQF",
+                                                                                                                                   ifelse(observer_abbreviation == "AAT", "AATI",
+                                                                                                                                          ifelse(observer_abbreviation == "DG", "DGJA",
+                                                                                                                                                 ifelse(observer_abbreviation == "KA", "KACA",
+                                                                                                                                                        ifelse(observer_abbreviation == "TV", "TVOL",
+                                                                                                                                                               ifelse(observer_abbreviation == "WR", "WRAB", "XXXX")))))))))))))))))))) 
 
 # check if the wrangled data frame contains the same structure as the template
 names(biometric_data) == names(biometric_data_CEUT)
@@ -201,3 +185,40 @@ names(biometric_data) == names(biometric_data_CEUT)
 # export to Excel
 write.xlsx(biometric_data_CEUT, "data/data_form_chickgrowth_CEUT.xlsx", 
            showNA = TRUE, sheetName = "4. biometric data", append = TRUE, row.names = FALSE)
+
+#### create the observers sheet ----
+# first check the structure of the template
+observers_and_authors_data <- 
+  read_excel(path = "data/data_form_chickgrowth.xlsx", 
+             sheet = "3. observers & authors", skip = 1, 
+             col_types = "text", na = "NA")
+
+names(observers_and_authors_data)
+
+# make the sheet for the Ceuta data
+observers_and_authors_data_CEUT <- 
+  data.frame(first_name = NA,
+             all_names = NA,
+             last_name = NA,
+             abbreviation = levels_check(biometric_data_CEUT, col_name = "observer_abbreviation"),
+             sites = "CEUT",
+             institution = NA,
+             department = NA,
+             address = NA,
+             ZIP = NA,
+             country = NA) %>% 
+  mutate(first_name = ifelse(abbreviation == "LJEP", "Luke", NA),
+         all_names = ifelse(abbreviation == "LJEP", "L. J.", NA),
+         last_name = ifelse(abbreviation == "LJEP", "Eberhart-Hertel", NA),
+         institution = ifelse(abbreviation == "LEP", "Max Planck Institute for Ornithology", NA),
+         department = ifelse(abbreviation == "LJEP", "Research Group for Behavioural Genetics and Evolutionary Ecology", NA),
+         address = ifelse(abbreviation == "LJEP", "Eberhard-Gwinner-Str. 5, Seewiesen", NA),
+         ZIP = ifelse(abbreviation == "LJEP", "82319", NA),
+         country = ifelse(abbreviation == "LJEP", "Germany", NA))
+
+# check if the wrangled data frame contains the same structure as the template
+names(observers_and_authors_data) == names(observers_and_authors_data_CEUT)
+
+# export to Excel
+write.xlsx(observers_and_authors_data_CEUT, "data/data_form_chickgrowth_CEUT.xlsx", 
+           showNA = TRUE, sheetName = "3. observers & authors", append = TRUE, row.names = FALSE)

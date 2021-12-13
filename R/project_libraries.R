@@ -3,6 +3,8 @@ library(readxl)
 library(xlsx)
 library(rJava)
 library(tidyverse)
+library(DBI)
+library(RSQLite)
 
 # connect to CeutaCLOSED
 CeutaCLOSED <- 
